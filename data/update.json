@@ -1,11 +1,15 @@
 {
-  "version": "1.1",
+  "version": "1.2",
   "files": {
-    "index.html": { "url": "https://darkpanel-coral.vercel.app/index.html" },
+    "index.html": {
+      "url": "https://darkpanel-coral.vercel.app/index.html"
+    },
     "css/style.css": {
       "url": "https://darkpanel-coral.vercel.app/css/style.css"
     },
-    "js/main.js": { "url": "https://darkpanel-coral.vercel.app/js/main.js" },
+    "js/main.js": {
+      "url": "https://darkpanel-coral.vercel.app/js/main.js"
+    },
     "CSXS/manifest.xml": {
       "url": "https://darkpanel-coral.vercel.app/CSXS/manifest.xml"
     }
