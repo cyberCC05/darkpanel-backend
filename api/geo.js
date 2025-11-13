@@ -9,8 +9,8 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       ip: ip,
-      country: geo.country || 'US',
-      country_name: geo.country_name || 'United States',
+      country: geo.country || 'UZ',
+      country_name: geo.country_name || 'Uzbekistan',
     });
   } catch (err) {
     return res.status(500).json({ error: 'Geo lookup failed' });
