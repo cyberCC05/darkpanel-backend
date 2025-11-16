@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST')
     return json(res, 405, { error: 'Method not allowed' });
 
-  // 🧠 JSON parser (for Vercel serverless)
+  // 🧠 JSON parser
   let body = {};
   try {
     const chunks = [];
@@ -35,22 +35,47 @@ export default async function handler(req, res) {
 
     if (!snap.exists())
       return json(res, 404, { ok: false, error: 'not_found' });
+
     const data = snap.val();
     const now = Date.now();
 
-    if (data.deviceId && data.deviceId !== deviceId) {
-      return json(res, 200, { ok: false, error: 'bound_to_other_device' });
+    // ===============================
+    // 🔥 1) LIFETIME DEVICE VERIFY
+    // ===============================
+    if (data.type === 'lifetime') {
+      if (data.deviceId && data.deviceId !== deviceId) {
+        return json(res, 200, {
+          ok: false,
+          error: 'bound_to_other_device',
+        });
+      }
+
+      if (!data.deviceId) {
+        await ref.update({ deviceId, createdAt: now });
+      }
+
+      return json(res, 200, { ok: true, type: 'lifetime' });
     }
 
+    // ===============================
+    // 🔥 2) TRIAL (NO DEVICE LIMIT)
+    // ===============================
     if (data.type === 'trial') {
       let exp = Number(data.expiresAt || 0);
+
+      // === First activation ===
       if (!exp) {
         exp = now + TRIAL_DAYS * 24 * 60 * 60 * 1000;
-        await ref.update({ deviceId, createdAt: now, expiresAt: exp });
-      } else if (now > exp) {
+        await ref.update({
+          createdAt: now,
+          expiresAt: exp,
+          // ❌ deviceId yo‘q → cheksiz device ruxsat
+        });
+      }
+
+      // === Expired ===
+      if (now > exp) {
         return json(res, 200, { ok: false, error: 'trial_expired' });
-      } else if (!data.deviceId) {
-        await ref.update({ deviceId });
       }
 
       const updated = (await ref.get()).val();
@@ -60,11 +85,6 @@ export default async function handler(req, res) {
         expiresAt: updated.expiresAt,
         remainingDays: daysLeft(updated.expiresAt),
       });
-    }
-
-    if (data.type === 'lifetime') {
-      if (!data.deviceId) await ref.update({ deviceId, createdAt: now });
-      return json(res, 200, { ok: true, type: 'lifetime' });
     }
 
     return json(res, 200, { ok: false, error: 'unknown_type' });
